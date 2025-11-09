@@ -3,6 +3,7 @@ import { SectionedCard, type LinkItem } from '@churchtools/styleguide';
 import { notNullish } from '@churchtools/utils';
 import { computed } from 'vue';
 import { useSurvey } from '../composables/useSurvey';
+import type { SurveyEntry } from '../utils/types';
 import { getEntryDataValue } from './helper';
 import { useSurveyHelper } from './useSurveyHelper';
 
@@ -18,13 +19,17 @@ const entries = computed(() => {
     if (!survey.value) {
         return [];
     }
-    return surveyEntries.value.map((entry): LinkItem => {
+    return surveyEntries.value.map((entry): LinkItem & SurveyEntry => {
         const ids = getEntryDataValue(entry.data, survey.value!.fields[0].key);
         return {
+            ...entry,
             type: 'link',
             bold: true,
-            description: new Date(entry.meta.createdDate).toLocaleString(),
-            value: entry.name,
+            description: [new Date(entry.meta.createdDate).toLocaleString(), entry.email]
+                .filter(notNullish)
+                .join(' · '),
+            value: [entry.name, entry.personId ? ` (#${entry.personId})` : ''].join(''),
+
             tags: ids
                 .map(value => {
                     const option = survey.value!.fields[0].options.find(opt => opt.id.toString() === value);

@@ -13,8 +13,20 @@ import { computed, ref } from 'vue';
 import type { ComponentProps } from 'vue-component-type-helpers';
 import { useSurvey } from '../composables/useSurvey';
 import { useSurveys } from '../composables/useSurveys';
-import { allowComments, internDescription, isMultiSelect, name, pollType, surveyDescription } from '../utils/fields';
+import {
+    allowComments,
+    askForMail,
+    hideDataFromParticipants,
+    internDescription,
+    isListed,
+    isMultiSelect,
+    name,
+    pollType,
+    surveyDescription,
+    surveyImage,
+} from '../utils/fields';
 import { typeDefinitions } from '../utils/helper';
+import { encodeId } from '../utils/tokenHelper';
 import type { Survey } from '../utils/types';
 import DetailBestOption from './DetailBestOption.vue';
 import DetailMaxOptions from './DetailMaxOptions.vue';
@@ -226,6 +238,12 @@ const baseItems = computed((): KeyValueItem[] => {
         },
         {
             type: 'key-value',
+            viz: { field: surveyImage, type: 'text', value: survey.value?.imageUrl || '' },
+            editable: true,
+            onSave: saveSurvey,
+        },
+        {
+            type: 'key-value',
             viz: {
                 field: pollType,
                 type: 'tags',
@@ -285,11 +303,54 @@ const settingsItems = computed((): KeyValueItem[] => {
             editable: true,
             onSave: saveSurvey,
         },
+        {
+            type: 'key-value',
+            bold: true,
+            viz: { type: 'yesno', field: isListed, value: survey.value?.isListed || false },
+            editable: true,
+            onSave: saveSurvey,
+        },
+        {
+            type: 'key-value',
+            bold: true,
+            viz: { type: 'yesno', field: askForMail, value: survey.value?.askForMail || false },
+            editable: true,
+            onSave: saveSurvey,
+        },
+        {
+            type: 'key-value',
+            bold: true,
+            viz: { type: 'yesno', field: isListed, value: survey.value?.isListed || false },
+            editable: true,
+            onSave: saveSurvey,
+        },
+        {
+            type: 'key-value',
+            bold: true,
+            viz: {
+                type: 'yesno',
+                field: hideDataFromParticipants,
+                value: survey.value?.hideDataFromParticipants || false,
+            },
+            editable: true,
+            onSave: saveSurvey,
+        },
     ];
 });
 </script>
 <template>
     <ContentWrapper
+        :actions="[
+            {
+                type: 'button',
+                icon: 'fas fa-eye',
+                label: 'Vorschau',
+                outlined: true,
+                href: `/ccm/survey/form/${encodeId(survey!.id)}`,
+                target: '_blank',
+                iconAfter: 'fas fa-external-link',
+            },
+        ]"
         :color="typeDefinitions[survey!.type].color"
         :icon="typeDefinitions[survey!.type].icon"
         :max-width="true"
@@ -299,7 +360,16 @@ const settingsItems = computed((): KeyValueItem[] => {
         <template v-else>
             <StatusCard v-bind="statusCard" />
             <SectionedCard :items="baseItems" />
-            <SectionedCard :items="optionsItems" title="Optionen" />
+            <SectionedCard :items="optionsItems" title="Optionen">
+                <!-- <template #default="{ item }">
+                    <div class="flex justify-between">
+                        <div>
+                            <span class="text-body-m-emphasized">{{ item.viz }}</span>
+                        </div>
+                        <Tag :label="item.viz" />
+                    </div>
+                </template> -->
+            </SectionedCard>
             <SectionedCard :items="settingsItems" title="Einstellungen" />
             <DetailMaxOptions v-if="survey?.type === 'max-options'" :id="surveyId" />
             <DetailMaxOptionsMultiple v-else-if="survey?.type === 'max-options-multiple'" :id="surveyId" />

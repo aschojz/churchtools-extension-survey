@@ -6,6 +6,7 @@ import type { SurveyEntry, SurveyOptionNew } from '../utils/types';
 const props = defineProps<{
     field: FieldSelect | FieldMultiselect;
     entries: SurveyEntry[];
+    hideData?: boolean;
 }>();
 const emit = defineEmits<{
     (event: 'change', value: { [key: string]: string[] }): void;
@@ -14,7 +15,12 @@ const emit = defineEmits<{
 const getEntriesWithThisOption = (option: SurveyOptionNew) => {
     return props.entries.filter(entry => {
         const fieldValue = entry.data[props.field.key];
-        return Array.isArray(fieldValue) ? fieldValue.includes(option.id) : fieldValue.toString() === option.id;
+        if (!fieldValue) {
+            return false;
+        }
+        return Array.isArray(fieldValue)
+            ? fieldValue.includes(option.id)
+            : (typeof fieldValue === 'string' ? fieldValue : fieldValue.toString()) === option.id;
     });
 };
 
@@ -26,7 +32,8 @@ const options = computed(() =>
             ...option,
             size: 'L',
             bold: true,
-            description: entries.length ? 'Gewählt von: ' + entries.map(entry => entry.name).join(', ') : '',
+            description:
+                entries.length && !props.hideData ? 'Gewählt von: ' + entries.map(entry => entry.name).join(', ') : '',
             disabled: necessaryCount <= 0,
             tag: {
                 label: `${entries.length} / ${option.maxCount || '∞'}`,

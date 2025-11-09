@@ -9,8 +9,8 @@ import {
     SectionHeader,
     Textarea,
 } from '@churchtools/styleguide';
-import { CtColor } from '@churchtools/utils';
-import { computed, ref } from 'vue';
+import { CtColor, useCurrentUser } from '@churchtools/utils';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useSurvey } from '../composables/useSurvey';
 import { decodeId } from '../utils/tokenHelper';
 import FormBestDate from './FormBestDate.vue';
@@ -24,6 +24,29 @@ const props = defineProps<{
 
 const id = computed(() => decodeId(props.id));
 const { survey, createSurveyEntry, surveyEntries, isPending } = useSurvey(id);
+
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const nameParam = urlParams.get('name');
+    const emailParam = urlParams.get('email');
+    if (nameParam) {
+        name.value = nameParam;
+    }
+    if (emailParam) {
+        email.value = emailParam;
+    }
+});
+
+const currentUser = useCurrentUser();
+watch(
+    () => currentUser.isLoading,
+    () => {
+        if (currentUser.isLoggedIn && currentUser.person) {
+            name.value = [currentUser.person.firstName, currentUser.person.lastName].join(' ');
+            email.value = currentUser.person.email;
+        }
+    },
+);
 
 const now = ref(new Date());
 setInterval(() => {
@@ -56,7 +79,8 @@ const surveyClosesInFiveMinutes = computed(() => {
 
 const firstField = computed(() => survey.value?.fields[0]);
 
-const name = ref('');
+const name = ref<string>('');
+const email = ref<string | undefined>();
 const selectedOptions = ref<string[]>([]);
 const data = ref<{ [key: string]: string[] | number }>({});
 const comment = ref('');
@@ -64,6 +88,8 @@ const successMessage = ref(false);
 const onCreateSurveyEntry = () => {
     createSurveyEntry({
         name: name.value,
+        email: email.value,
+        personId: currentUser?.id > 0 ? currentUser.id : undefined,
         data: data.value,
         comments: comment.value ? [{ comment: comment.value, createdDate: new Date().toISOString() }] : [],
     });
@@ -76,6 +102,7 @@ const onCreateSurveyEntry = () => {
 
 const clearForm = () => {
     name.value = '';
+    email.value = '';
     selectedOptions.value = [];
     data.value = {};
     comment.value = '';
@@ -93,6 +120,13 @@ const allComments = computed(() => {
         :max-width="true"
         :title="surveyIsOpen ? survey?.name : ''"
     >
+        <template #hero>
+            <img
+                v-if="survey?.imageUrl || true"
+                class="mb-8 h-48 w-full rounded-md object-cover"
+                :src="survey?.imageUrl"
+            />
+        </template>
         <LoadingMessage v-if="isPending" />
         <InfoBox
             v-else-if="!surveyIsOpen"
@@ -119,33 +153,45 @@ const allComments = computed(() => {
             />
             <form action="#" class="flex flex-col gap-4" @submit.prevent="onCreateSurveyEntry">
                 <Input v-model="name" label="Name" :required="true" />
+                <Input v-if="survey?.askForMail" v-model="email" label="E-Mail-Adresse" :required="true" type="email" />
                 <FormMaxOptionsMultiple
                     v-if="survey?.type === 'max-options-multiple'"
                     :entries="surveyEntries"
                     :field="firstField"
+                    :hide-data="survey.hideDataFromParticipants"
                     @change="data = $event"
                 />
                 <FormMaxOptions
                     v-else-if="survey?.type === 'max-options'"
                     :entries="surveyEntries"
                     :field="firstField"
+                    :hide-data="survey.hideDataFromParticipants"
                     @change="data = $event"
                 />
                 <FormBestDate
                     v-else-if="survey?.type === 'best-date'"
                     :entries="surveyEntries"
                     :field="firstField"
+                    :hide-data="survey.hideDataFromParticipants"
                     @change="data = $event"
                 />
-                <FormBestOption v-else :entries="surveyEntries" :field="firstField" @change="data = $event" />
+                <FormBestOption
+                    v-else
+                    :entries="surveyEntries"
+                    :field="firstField"
+                    :hide-data="survey?.hideDataFromParticipants"
+                    @change="data = $event"
+                />
                 <Textarea v-if="survey?.allowComments" v-model="comment" label="Kommentar" :rows="3" />
                 <div class="flex justify-end">
-                    <Button :color="CtColor.CONSTRUCTIVE" icon="fas fa-paper-plane" type="submit"> Absenden </Button>
+                    <Button :color="CtColor.CONSTRUCTIVE" :disabled="!data" icon="fas fa-paper-plane" type="submit">
+                        Absenden
+                    </Button>
                 </div>
             </form>
 
             <div
-                v-if="survey?.allowComments && allComments.length"
+                v-if="survey?.allowComments && !survey?.hideDataFromParticipants && allComments.length"
                 class="flex flex-col gap-2"
                 style="--card-px: 1rem; --card-py: 0.75rem"
             >

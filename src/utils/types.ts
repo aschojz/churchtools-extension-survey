@@ -19,13 +19,17 @@ export type Survey = SurveyNew & {
 export type SurveyNew = {
     name: string;
     description?: string;
+    imageUrl?: string;
     fields: ((FieldSelect | FieldMultiselect) & { options: SurveyOptionNew[] })[];
     startDate?: string;
     endDate?: string;
-    isActive?: boolean;
     type: SurveyType;
     surveyDescription?: string;
+    isActive?: boolean;
     allowComments?: boolean;
+    askForMail?: boolean;
+    isListed?: boolean;
+    hideDataFromParticipants?: boolean;
 };
 
 export type SurveyOptionNew = {
@@ -45,6 +49,7 @@ export type SurveyEntry = SurveyEntryNew & {
 
 export type SurveyEntryNew = {
     name: string;
+    personId?: number;
     email?: string;
     data: Record<string, string[] | number>;
     comments?: {

@@ -145,7 +145,6 @@ const onSetSetting = (data: { [key: string]: any }) => {
         <Textarea
             v-model="surveyDescription"
             label="Beschreibung der Umfrage"
-            :max-length="300"
             note="Sichtbar für den Nutzer als Einleitung"
         />
         <SelectInline v-model="pollType" :emit-id="true" label="Umfrage-Typ" :options="pollTypeOptions" />

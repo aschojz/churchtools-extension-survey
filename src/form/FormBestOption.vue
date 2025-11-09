@@ -6,6 +6,7 @@ import type { SurveyEntry, SurveyOptionNew } from '../utils/types';
 const props = defineProps<{
     field: FieldSelect | FieldMultiselect;
     entries: SurveyEntry[];
+    hideData?: boolean;
 }>();
 const emit = defineEmits<{
     (event: 'change', value: { [key: string]: string[] }): void;
@@ -26,7 +27,10 @@ const options = computed(() => {
                 ...option,
                 size: 'L',
                 count: entries.length,
-                description: entries.length ? 'Gewählt von: ' + entries.map(entry => entry.name).join(', ') : '',
+                description:
+                    entries.length && !props.hideData
+                        ? 'Gewählt von: ' + entries.map(entry => entry.name).join(', ')
+                        : '',
             };
         },
     );

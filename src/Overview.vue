@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ContentWrapper, SectionedCard, type LinkItem } from '@churchtools/styleguide';
+import { ContentWrapper, Grid, GridHeader, SectionedCard, type LinkItem } from '@churchtools/styleguide';
 import { CtColor } from '@churchtools/utils';
 import { computed } from 'vue';
 import { useSurveys } from './composables/useSurveys';
@@ -19,7 +19,6 @@ const items = computed((): LinkItem[] =>
         },
         size: 'L',
         description: survey.description,
-        to: { path: `/${survey.id}` },
         actions: [
             {
                 type: 'button',
@@ -28,6 +27,7 @@ const items = computed((): LinkItem[] =>
                 target: '_blank',
             },
             { type: 'button', icon: 'fas fa-trash-alt', onClick: () => deleteSurvey(survey.id) },
+            { type: 'button', icon: 'fas fa-chevron-right', to: { path: `/${survey.id}` } },
         ],
     })),
 );
@@ -39,7 +39,18 @@ const actions = computed(() => ({
 }));
 </script>
 <template>
-    <ContentWrapper :actions="[actions]" icon="fas fa-list-check" :max-width="true" title="Umfragen">
-        <SectionedCard :emptystate="{ icon: 'fas fa-list-check' }" :items="items" />
-    </ContentWrapper>
+    <Grid icon="fas fa-list-checks" :storage-key="'survey-overview-grid'" style="--menu-height: 0px">
+        <template #header>
+            <GridHeader icon="fas fa-list-check" :menu="[]" title="Umfragen" />
+        </template>
+        <ContentWrapper
+            :actions="[actions]"
+            class="col-span-2"
+            icon="fas fa-list-check"
+            :max-width="true"
+            title="Umfragen"
+        >
+            <SectionedCard :emptystate="{ icon: 'fas fa-list-check' }" :items="items" />
+        </ContentWrapper>
+    </Grid>
 </template>
