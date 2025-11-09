@@ -88,7 +88,7 @@ const successMessage = ref(false);
 const onCreateSurveyEntry = () => {
     createSurveyEntry({
         name: name.value,
-        email: email.value,
+        email: email.value?.toLocaleLowerCase(),
         personId: currentUser?.id > 0 ? currentUser.id : undefined,
         data: data.value,
         comments: comment.value ? [{ comment: comment.value, createdDate: new Date().toISOString() }] : [],
@@ -184,7 +184,12 @@ const allComments = computed(() => {
                 />
                 <Textarea v-if="survey?.allowComments" v-model="comment" label="Kommentar" :rows="3" />
                 <div class="flex justify-end">
-                    <Button :color="CtColor.CONSTRUCTIVE" :disabled="!data" icon="fas fa-paper-plane" type="submit">
+                    <Button
+                        :color="CtColor.CONSTRUCTIVE"
+                        :disabled="Object.keys(data).length === 0"
+                        icon="fas fa-paper-plane"
+                        type="submit"
+                    >
                         Absenden
                     </Button>
                 </div>

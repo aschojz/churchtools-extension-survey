@@ -2,6 +2,7 @@
 import { Input } from '@churchtools/styleguide';
 import type { FieldMultiselect, FieldSelect, UniformedOption } from '@churchtools/utils';
 import { computed, reactive } from 'vue';
+import { getEntriesWithThisOption } from '../survey/helper';
 import type { SurveyEntry, SurveyOptionNew } from '../utils/types';
 
 const props = defineProps<{
@@ -19,16 +20,9 @@ const onSetData = (optionId: string, value: number | string) => {
     emit('change', data);
 };
 
-const getEntriesWithThisOption = (option: SurveyOptionNew) => {
-    let count = 0;
-    props.entries.forEach(entry => {
-        count += (entry.data[option.id] as number) || 0;
-    });
-    return count;
-};
 const options = computed(() => {
     return ((props.field?.options || []) as (UniformedOption & SurveyOptionNew)[]).map(option => {
-        const entriesCount = getEntriesWithThisOption(option);
+        const entriesCount = getEntriesWithThisOption(props.entries, props.field.key, option).length;
         const necessaryCount = (option.maxCount || Infinity) - entriesCount;
         return {
             ...option,

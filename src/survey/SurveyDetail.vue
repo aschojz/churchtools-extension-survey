@@ -7,11 +7,13 @@ import {
     StatusCard,
     type DropdownItem,
     type KeyValueItem,
+    type LinkItem,
 } from '@churchtools/styleguide';
 import { CtColor, type UniformedOption } from '@churchtools/utils';
 import { computed, ref } from 'vue';
 import type { ComponentProps } from 'vue-component-type-helpers';
 import { useSurvey } from '../composables/useSurvey';
+import { useSurveyEdit } from '../composables/useSurveyEdit';
 import { useSurveys } from '../composables/useSurveys';
 import {
     allowComments,
@@ -31,6 +33,7 @@ import type { Survey } from '../utils/types';
 import DetailBestOption from './DetailBestOption.vue';
 import DetailMaxOptions from './DetailMaxOptions.vue';
 import DetailMaxOptionsMultiple from './DetailMaxOptionsMultiple.vue';
+import { getEntriesWithThisOption } from './helper';
 
 const props = defineProps<{
     id: string;
@@ -43,7 +46,7 @@ setInterval(() => {
 
 const surveyId = computed(() => parseInt(props.id));
 const { updateSurvey } = useSurveys();
-const { survey, isPending } = useSurvey(surveyId);
+const { survey, isPending, surveyEntries } = useSurvey(surveyId);
 const saveSurvey = (updatedFields: Partial<Survey>) => updateSurvey({ id: surveyId.value, ...updatedFields });
 
 const setStartDateItem = computed(
@@ -255,29 +258,48 @@ const baseItems = computed((): KeyValueItem[] => {
     ];
 });
 
-const optionsItems = computed((): KeyValueItem[] => {
+const { createOrEditOption } = useSurveyEdit();
+const optionsItems = computed((): LinkItem[] => {
     if (!survey.value) {
         return [];
     }
-    return survey.value.fields[0].options.map(option => ({
-        type: 'key-value',
-        viz: {
-            field: {
-                key: 'nameTranslated',
-                fieldTypeCode: 'text',
-                nameTranslated: 'Option',
-            },
-            type: 'text',
+    return survey.value.fields[0].options.map(option => {
+        const count = getEntriesWithThisOption(surveyEntries.value, survey.value!.fields[0].key, option).length;
+        return {
+            type: 'link',
             value: option.nameTranslated,
-        },
-        editable: true,
-        onSave: (updatedOption: Partial<typeof option>) => {
-            const updatedOptions = survey.value!.fields[0].options.map(opt =>
-                opt.id === option.id ? { ...opt, ...updatedOption } : opt,
-            );
-            saveSurvey({ fields: [{ ...survey.value!.fields[0], options: updatedOptions }] });
-        },
-    }));
+            description: option.description,
+            bold: true,
+            tags: [
+                {
+                    color:
+                        count === option.maxCount
+                            ? CtColor.CONSTRUCTIVE
+                            : !option.maxCount || count / option.maxCount < 0.5
+                              ? CtColor.BASIC
+                              : count / option.maxCount < 0.75
+                                ? CtColor.YELLOW
+                                : CtColor.LIME,
+                    label: `${count}/${option.maxCount || '∞'}`,
+                },
+            ],
+            actions: [
+                {
+                    type: 'button',
+                    icon: 'fas fa-pen',
+                    onClick: async () => {
+                        const result = await createOrEditOption(survey.value, option);
+                        if (result) {
+                            const updatedOptions = survey.value!.fields[0].options.map(opt =>
+                                opt.id === option.id ? { ...opt, ...result } : opt,
+                            );
+                            saveSurvey({ fields: [{ ...survey.value!.fields[0], options: updatedOptions }] });
+                        }
+                    },
+                },
+            ],
+        };
+    });
 });
 
 const settingsItems = computed((): KeyValueItem[] => {
