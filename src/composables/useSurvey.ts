@@ -11,12 +11,13 @@ import { usePlugin } from './usePlugin';
 export function useSurvey(id: MaybeRef<number | null>) {
     const { moduleId } = usePlugin();
 
-    const { createCustomDataValue, deleteCustomDataValue } =
+    const { createCustomDataValue, deleteCustomDataValue, updateCustomDataValue } =
         toValue(id) !== null
             ? useCustomModuleDataValuesMutations<SurveyEntry>(moduleId, id as MaybeRef<number>)
             : {
                   createCustomDataValue: async () => {},
                   deleteCustomDataValue: async () => {},
+                  updateCustomDataValue: async () => {},
               };
 
     const createSurveyEntry = async (surveyEntry: SurveyEntryNew) => {
@@ -26,6 +27,16 @@ export function useSurvey(id: MaybeRef<number | null>) {
             meta: {
                 createdDate: new Date().toISOString(),
                 modifiedDate: undefined,
+            },
+        });
+    };
+    const updateSurveyEntry = async (surveyEntry: SurveyEntry & { id: number }) => {
+        await updateCustomDataValue({
+            dataCategoryId: toValue(id)!,
+            ...surveyEntry,
+            meta: {
+                ...surveyEntry.meta,
+                modifiedDate: new Date().toISOString(),
             },
         });
     };
@@ -48,5 +59,5 @@ export function useSurvey(id: MaybeRef<number | null>) {
             : { data: ref(undefined) };
     const surveyEntries = computed(() => data.value ?? []);
 
-    return { survey, createSurveyEntry, surveyEntries, isPending, deleteSurveyEntry };
+    return { survey, createSurveyEntry, surveyEntries, isPending, deleteSurveyEntry, updateSurveyEntry };
 }

@@ -288,7 +288,7 @@ const optionsItems = computed((): LinkItem[] => {
                     type: 'button',
                     icon: 'fas fa-pen',
                     onClick: async () => {
-                        const result = await createOrEditOption(survey.value, option);
+                        const result = await createOrEditOption(survey.value!, option);
                         if (result) {
                             const updatedOptions = survey.value!.fields[0].options.map(opt =>
                                 opt.id === option.id ? { ...opt, ...result } : opt,
@@ -328,13 +328,6 @@ const settingsItems = computed((): KeyValueItem[] => {
         {
             type: 'key-value',
             bold: true,
-            viz: { type: 'yesno', field: isListed, value: survey.value?.isListed || false },
-            editable: true,
-            onSave: saveSurvey,
-        },
-        {
-            type: 'key-value',
-            bold: true,
             viz: { type: 'yesno', field: askForMail, value: survey.value?.askForMail || false },
             editable: true,
             onSave: saveSurvey,
@@ -362,17 +355,19 @@ const settingsItems = computed((): KeyValueItem[] => {
 </script>
 <template>
     <ContentWrapper
+        v-if="survey"
         :actions="[
             {
                 type: 'button',
                 icon: 'fas fa-eye',
                 label: 'Vorschau',
                 outlined: true,
-                href: `/ccm/survey/form/${encodeId(survey!.id)}`,
+                href: `/ccm/survey/form/${encodeId(survey.id)}`,
                 target: '_blank',
                 iconAfter: 'fas fa-external-link',
             },
         ]"
+        :breadcrumbs="[{ title: 'Umfragen', to: '/' }, { title: survey.name }]"
         :color="typeDefinitions[survey!.type].color"
         :icon="typeDefinitions[survey!.type].icon"
         :max-width="true"

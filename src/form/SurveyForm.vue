@@ -35,7 +35,14 @@ onMounted(() => {
     if (emailParam) {
         email.value = emailParam;
     }
+    init();
 });
+const init = () => {
+    if (survey.value) {
+        document.title = `Umfrage - ${survey.value.name}`;
+    }
+};
+watch(survey, init);
 
 const currentUser = useCurrentUser();
 watch(
@@ -121,11 +128,7 @@ const allComments = computed(() => {
         :title="surveyIsOpen ? survey?.name : ''"
     >
         <template #hero>
-            <img
-                v-if="survey?.imageUrl || true"
-                class="mb-8 h-48 w-full rounded-md object-cover"
-                :src="survey?.imageUrl"
-            />
+            <img v-if="survey?.imageUrl" class="mb-8 h-48 w-full rounded-md object-cover" :src="survey?.imageUrl" />
         </template>
         <LoadingMessage v-if="isPending" />
         <InfoBox
