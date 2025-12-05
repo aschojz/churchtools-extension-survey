@@ -85,7 +85,7 @@ const createGroup = async (): Promise<Group['id']> => {
         },
     });
     if (groupPayload) {
-        const group = await createGroupFunc({ ...groupPayload, groupStatusId: GROUP_STATUS_ID.ACTIVE });
+        const group = await createGroupFunc({ ...groupPayload, force: true, groupStatusId: GROUP_STATUS_ID.ACTIVE });
         return group.id;
     }
     throw new Error('Gruppe wurde nicht erstellt');

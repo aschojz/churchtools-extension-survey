@@ -3,9 +3,15 @@ import { createRouter, createWebHistory } from 'vue-router';
 import CreateSurvey from './CreateSurvey.vue';
 import Overview from './Overview.vue';
 import SurveyForm from './form/SurveyForm.vue';
+import ListSurveys from './list/List.vue';
 import SurveyDetail from './survey/SurveyDetail.vue';
 
 const routes: RouteRecordRaw[] = [
+    {
+        path: '/list',
+        name: 'list',
+        component: ListSurveys,
+    },
     {
         path: '/create',
         name: 'create',

@@ -11,6 +11,7 @@ import {
 } from '@churchtools/styleguide';
 import { CtColor, useCurrentUser } from '@churchtools/utils';
 import { computed, onMounted, ref, watch } from 'vue';
+import { useHelper } from '../composables/useHelper';
 import { useSurvey } from '../composables/useSurvey';
 import { decodeId } from '../utils/tokenHelper';
 import FormBestDate from './FormBestDate.vue';
@@ -54,35 +55,7 @@ watch(
         }
     },
 );
-
-const now = ref(new Date());
-setInterval(() => {
-    now.value = new Date();
-}, 10000);
-
-const surveyIsOpen = computed(() => {
-    if (!survey.value) {
-        return false;
-    }
-    const startDate = survey.value.startDate ? new Date(survey.value.startDate) : null;
-    const endDate = survey.value.endDate ? new Date(survey.value.endDate) : null;
-
-    if (startDate && now.value < startDate) {
-        return false;
-    }
-    if (endDate && now.value > endDate) {
-        return false;
-    }
-    return survey.value.isActive;
-});
-const surveyClosesInFiveMinutes = computed(() => {
-    if (!survey.value?.endDate) {
-        return false;
-    }
-    const endDate = new Date(survey.value.endDate);
-    const fiveMinutesFromNow = new Date(now.value.getTime() + 5 * 60 * 1000);
-    return now.value < endDate && fiveMinutesFromNow >= endDate;
-});
+const { surveyIsOpen, now, surveyClosesInFiveMinutes } = useHelper();
 
 const firstField = computed(() => survey.value?.fields[0]);
 
@@ -123,16 +96,16 @@ const allComments = computed(() => {
 </script>
 <template>
     <ContentWrapper
-        :description="surveyIsOpen ? survey?.surveyDescription : ''"
+        :description="surveyIsOpen(survey) ? survey?.surveyDescription : ''"
         :max-width="true"
-        :title="surveyIsOpen ? survey?.name : ''"
+        :title="surveyIsOpen(survey) ? survey?.name : ''"
     >
         <template #hero>
             <img v-if="survey?.imageUrl" class="mb-8 h-48 w-full rounded-md object-cover" :src="survey?.imageUrl" />
         </template>
         <LoadingMessage v-if="isPending" />
         <InfoBox
-            v-else-if="!surveyIsOpen"
+            v-else-if="!surveyIsOpen(survey)"
             :description="
                 survey?.isActive === false || !survey?.startDate || now > new Date(survey.startDate)
                     ? 'Die Umfrage ist derzeit geschlossen und kann nicht ausgefüllt werden.'
@@ -149,7 +122,7 @@ const allComments = computed(() => {
         />
         <template v-else-if="firstField">
             <InfoBox
-                v-if="surveyClosesInFiveMinutes"
+                v-if="surveyClosesInFiveMinutes(survey)"
                 :description="`Die Umfrage wird in Kürze (${new Date(survey!.endDate!).toLocaleString()}) geschlossen und kann dann nicht mehr ausgefüllt werden.`"
                 title="Umfrage wird geschlossen"
                 :type="CtColor.WARNING"

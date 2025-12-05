@@ -30,6 +30,7 @@ export type SurveyNew = {
     askForMail?: boolean;
     isListed?: boolean;
     hideDataFromParticipants?: boolean;
+    sortKey?: number;
 };
 
 export type SurveyOptionNew = {
