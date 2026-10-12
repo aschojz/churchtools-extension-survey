@@ -1,0 +1,66 @@
+import { flushPromises, mount } from '@vue/test-utils';
+import { VueQueryPlugin } from '@tanstack/vue-query';
+import { defineComponent, h, ref } from 'vue';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { churchtoolsClient } from '@churchtools/churchtools-client';
+import { useSurvey } from '../src/composables/useSurvey';
+import { useSurveys } from '../src/composables/useSurveys';
+import { resolveConfirm } from '../src/composables/useConfirm';
+import { keys, fetchSurveys, decode } from '../src/data/ccm';
+import { queryClient } from '../src/data/queryClient';
+import { optionCount, validateEntry } from '../src/utils/validation';
+import type { Survey, SurveyEntry, SurveyNew } from '../src/utils/types';
+vi.mock('@churchtools/churchtools-client', () => ({ churchtoolsClient: { get: vi.fn(), post: vi.fn(), put: vi.fn(), deleteApi: vi.fn() } }));
+const wrappers: ReturnType<typeof mount>[] = [];
+function setup<T>(fn: () => T): T {
+    let result!: T;
+    wrappers.push(mount(defineComponent({ setup: () => { result = fn(); return () => h('div'); } }), { global: { plugins: [[VueQueryPlugin, { queryClient }]] } }));
+    return result;
+}
+const survey: Survey = { id: 20, customModuleId: 4, shorty: 'survey_test', name: 'Alt', type: 'max-options-multiple', isActive: true, fields: [{ key: 'options', fieldTypeCode: 'multiselect', options: [{ id: 'a', nameTranslated: 'A', maxCount: 1, maxSelectable: 1 }] }], meta: { createdDate: '2026-10-11' } };
+const entry: SurveyEntry = { id: 30, dataCategoryId: 20, name: 'Test', data: { a: 1 }, status: 'cancelled', meta: { createdDate: '2026-10-11' } };
+function prime() { queryClient.setQueryData(['survey-module','survey'], { id: 4 }); queryClient.setQueryData(keys.category(4,20), survey); queryClient.setQueryData(keys.categories(4), [survey]); }
+afterEach(() => { wrappers.splice(0).forEach(w=>w.unmount()); queryClient.clear(); vi.resetAllMocks(); resolveConfirm(false); });
+describe('Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens)', () => {
+    it('deletion follows changed route after confirmation instead of original category', async () => {
+        prime(); const id = ref<number|null>(20); const state = setup(()=>useSurvey(id,true));
+        const deleting = state.deleteSurveyEntry(30); id.value = 21; resolveConfirm(true); await deleting;
+        expect(churchtoolsClient.deleteApi).toHaveBeenCalledWith('/custommodules/4/customdatacategories/21/customdatavalues/30');
+    });
+    it('update prefers stale category list over fresher detail cache', async () => {
+        prime(); queryClient.setQueryData(keys.category(4,20), {...survey,name:'Neue Fremdänderung'});
+        const state = setup(useSurveys); await state.updateSurvey({id:20,isActive:false});
+        expect(vi.mocked(churchtoolsClient.put).mock.calls[0][1]).toMatchObject({name:'Alt'});
+    });
+    it('entry mutations accept quantities exceeding both limits', async () => {
+        prime(); const state = setup(()=>useSurvey(ref(20),true));
+        await state.updateSurveyEntry({...entry,data:{a:99}});
+        const body = vi.mocked(churchtoolsClient.put).mock.calls[0][1] as {value:string};
+        expect(JSON.parse(body.value).data.a).toBe(99);
+    });
+    it('returned quantities still consume capacity', () => {
+        expect(optionCount(survey,[entry],survey.fields[0].options[0])).toBe(1);
+        expect(()=>validateEntry(survey,{name:'Andere Person',data:{a:1}},[entry])).toThrow('nicht mehr genügend');
+    });
+    it('one malformed category prevents loading all valid categories', async () => {
+        vi.mocked(churchtoolsClient.get).mockResolvedValueOnce([{id:20,shorty:'survey_valid',data:JSON.stringify(survey)}, {id:21,shorty:'survey_broken',data:'{not json'}]);
+        await expect(fetchSurveys(4)).rejects.toThrow();
+    });
+    it('schema-incompatible objects pass decoding without validation', () => {
+        expect(decode<Survey>('{}',{id:20}).fields).toBeUndefined();
+        expect(decode<Survey>('{"type":"unknown"}',{id:20}).type).toBe('unknown');
+    });
+    it('numeric strings from legacy data are ignored when counting capacity', () => {
+        const legacy = {...entry,data:{a:'1'}} as unknown as SurveyEntry;
+        expect(optionCount(survey,[legacy],survey.fields[0].options[0])).toBe(0);
+    });
+    it('two submissions validate against the same snapshot without a reservation', () => {
+        const first={name:'A',data:{a:1}}, second={name:'B',data:{a:1}};
+        expect(()=>validateEntry(survey,first,[])).not.toThrow();
+        expect(()=>validateEntry(survey,second,[])).not.toThrow();
+    });
+    it('inactive names remain listed with no schema-level format guarantees', async () => {
+        vi.mocked(churchtoolsClient.get).mockResolvedValueOnce([{id:4,shorty:'survey-1',data:JSON.stringify(survey)}]);
+        expect(await fetchSurveys(4)).toEqual([]);
+    });
+});

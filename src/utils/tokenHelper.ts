@@ -29,7 +29,8 @@ export function decodeId(encoded: string): number | null {
         if (parts.length >= 1) {
             const deobfuscated = parseInt(parts[0]);
             if (!isNaN(deobfuscated)) {
-                return deobfuscated ^ 0x12345; // Reverse the XOR
+                const id = deobfuscated ^ 0x12345;
+                return id > 0 ? id : null;
             }
         }
         return null;

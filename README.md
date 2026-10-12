@@ -1,114 +1,83 @@
-# ChurchTools Extension Boilerplate
+# ChurchTools Extension Survey
 
-This project provides a boilerplate for building your own extension for [ChurchTools](https://www.church.tools).
+Umfragen für ChurchTools: Terminfindung, Abstimmungen, Optionen mit begrenzter Kapazität und Materialausgabe mit Mengen pro Teilnehmer. Die Oberfläche verwendet Vue 3, Nuxt UI 4 und Tailwind CSS 4; API-Zugriffe erfolgen über den öffentlichen ChurchTools Client und TanStack Vue Query.
 
-## Getting Started
+## Entwicklung
 
-### Prerequisites
+Node.js 22.13+ oder 24 und npm verwenden. Alle Dependencies sind in der öffentlichen npm-Registry verfügbar. Es werden keine privaten ChurchTools-Packages, Registry-Zugangsdaten oder benachbarten Repositories benötigt.
 
--   Node.js (version compatible with the project)
--   npm or yarn
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-    ```bash
-    npm install
-    ```
-
-### Optional: Using Dev Container
-
-This project includes a dev container configuration. If you use VS Code with the "Dev Containers" extension, you can:
-
-1. Clone the repository
-2. Open it in VS Code
-3. Click the Remote Indicator in the bottom-left corner of VS Code status bar
-4. Select "Reopen in Container"
-
-The container includes the tools mentioned in the prerequisites pre-installed and also runs `npm install` on startup.
-
-## Configuration
-
-Copy `.env-example` to `.env` and fill in your data.
-
-In the `.env` file, configure the necessary constants for your project. This file is included in `.gitignore` to prevent sensitive data from being committed to version control.
-
-## Development and Deployment
-
-### Development Server
-
-Start a development server with hot-reload:
-
-```bash
+```sh
+npm ci
+cp .env-example .env
 npm run dev
 ```
 
-> **Note:** For local development, make sure to configure CORS in your ChurchTools
-> instance to allow requests from your local development server
-> (typically `http://localhost:5173`).
-> This can be done in the ChurchTools admin settings under:
-> "System Settings" > "Integrations" > "API" > "Cross-Origin Resource Sharing"
->
-> If login works in Chrome but not in Safari, the issue is usually that Safari has stricter cookie handling:
-> - Safari blocks `Secure; SameSite=None` cookies on `http://localhost` (Chrome allows them in dev).
-> - Safari also blocks cookies if the API is on another domain (third‑party cookies).
->
-> **Fix:**
-> 1. Use a Vite proxy so API calls go through your local server (`/api → https://xyz.church.tools`). This makes cookies look first‑party.
-> 2. Run your dev server with **HTTPS**. You can generate a local trusted certificate with [mkcert](https://github.com/FiloSottile/mkcert).
->
-> With proxy + HTTPS, Safari will accept and store cookies just like Chrome.
+In `.env` den Extension-Key (`VITE_KEY`, standardmäßig `survey`) und die ChurchTools-Instanz (`VITE_BASE_URL`) setzen. Optional können `VITE_USERNAME` und `VITE_PASSWORD` für den lokalen Entwicklungslogin eingetragen werden. In ChurchTools muss CORS für den lokalen Entwicklungsserver erlaubt sein. In der installierten Extension wird `window.settings.base_url` verwendet und die bestehende ChurchTools-Sitzung genutzt.
 
-### Building for Production
+## Funktionen
 
-To create a production build:
+- Umfragen erstellen, bearbeiten, duplizieren, sortieren und mit Bestätigung löschen.
+- Öffnungs- und Schließtermine planen, deaktivieren und wieder öffnen.
+- Namen, E-Mail-Abfrage, Kommentare, Bild und öffentliche Listung konfigurieren.
+- Einzel- und Mehrfachauswahl, Mengenobergrenzen und Limits pro Teilnehmer.
+- Getrennte Ansichten für Ergebnisse, Einträge, Einstellungen und Sitzungsverlauf.
+- Ergebnisranglisten mit Stimmen, Prozenten und Kapazitäten; CSV-Export für Tabellenprogramme.
+- Teilnahmelink kopieren, QR-Code anzeigen und herunterladen.
+- Teilnehmer nach Name, E-Mail, Option oder Status filtern; Einträge bearbeiten, löschen und gemeinsam umstellen.
+- Optionen sortieren und archivieren, ohne bestehende Antworten zu verlieren.
+- Ungespeicherte Entwürfe markieren, Navigation absichern und Änderungen während Schreibvorgängen sperren.
+- Eigene Teilnahme für angemeldete Personen mit vorhandenen API-Rechten bearbeiten oder stornieren.
+- Die letzten 20 Änderungen der Browser-Sitzung mit Konfliktprüfung rückgängig machen.
+- Bei Materialausgaben die Zustände „Neu“, „Ausgegeben“ und „Zurückgebracht“ verwalten und Mengensummen anzeigen.
 
-```bash
-npm run build
+Verwaltungsaktionen berücksichtigen die von `/permissions/global` gelieferten modul- und kategoriespezifischen Rechte. Die API erzwingt die tatsächlichen Berechtigungen. Die Einstellung „Teilnehmerdaten verbergen“ blendet Namen, Stimmen und Kommentare in der Teilnehmeroberfläche aus; API-Rechte müssen gesondert in ChurchTools gesetzt werden.
+
+Teilnahmelinks bleiben kompatibel. Gespeicherte Umfragen und Einträge werden zur Laufzeit geprüft. Fehlerhafte Datensätze erscheinen als Diagnose; gültige Umfragen bleiben nutzbar. Es findet keine automatische Datenmigration statt. Neue Umfrage-JSONs tragen `schemaVersion: 1`. Die alten, deaktivierten Gruppenübertragungs-Experimente mit fest eingebauten Gruppen- und Feld-IDs wurden entfernt.
+
+Rückgaben/Stornierungen geben belegte Kapazität wieder frei. Beim Bearbeiten wird der bisherige Eintrag aus dem belegten Bestand herausgerechnet. Bestehende Optionen werden archiviert statt entfernt.
+
+Die Kategorie-API erlaubt höchstens 100 Zeichen im Namen, 300 in der internen Beschreibung und 2.000 im gesamten Umfrage-JSON; Einträge erlauben 10.000 Zeichen. Der Editor zeigt das Budget und prüft die serialisierte Payload.
+
+Beim Absenden werden Umfragezustand und Einträge frisch geladen und jede gewählte Option geprüft. Gleichzeitige Schreibzugriffe verschiedener Browser können ohne atomare Reservierung in der ChurchTools-API weiterhin miteinander konkurrieren.
+
+## Qualität und Build
+
+```sh
+npm run check          # TypeScript, ESLint, Tests und Produktionsbuild
+npm run package:verify
+npm run deploy        # Build und lokales ZIP; lädt nichts hoch
 ```
 
-### Preview Production Build
+Release-Namen enthalten Paketversion, Git-Revision und einen Hash des Build-Inhalts. Das ZIP unter `releases/` enthält `dist/` für die Installation in ChurchTools. Die Paketprüfung kontrolliert private Package-Referenzen, unerwartete Dateien und die versehentliche Aufnahme lokaler Entwicklungs-Zugangsdaten.
 
-To preview the production build locally:
+TypeScript 6 wird verwendet, weil der aktuelle `typescript-eslint`-Parser TypeScript 7 noch nicht unterstützt. Die übrigen direkten Dependencies wurden auf aktuelle Versionen aktualisiert.
 
-```bash
-npm run preview
-```
-
-### Deployment
-
-To build and package your extension for deployment:
-
-```bash
-npm run deploy
-```
-
-This command will:
-
-1. Build the project
-2. Package it using the `scripts/package.js` script
-
-You can find the package in the `releases` directory.
+Nuxt UI wird über den [Vue/Vite-Integrationsweg](https://ui.nuxt.com/docs/getting-started/installation/vue) eingebunden. Die [LLM-Dokumentation](https://ui.nuxt.com/llms.txt) enthält die Komponentenreferenz. Tailwind-Utilities und Nuxt-UI-Klassen tragen das Präfix `survey:`, und es wird kein globaler CSS-Reset in die ChurchTools-Oberfläche eingebracht. Lucide-Icons werden lokal gebündelt.
 
 ## API
 
-Following endpoints are available. Permissions are possible per route. Types are documented in `ct-types.d.ts` (CustomModuleCreate, CustomModuleDataCategoryCreate, CustomModuleDataValueCreate)
+Die Extension verwendet `/custommodules/{key}`, die Kategorien unter `/custommodules/{moduleId}/customdatacategories` und die Werte unter `/custommodules/{moduleId}/customdatacategories/{categoryId}/customdatavalues`. Survey-Metadaten liegen als JSON in `data`, Einträge als JSON in `value`.
 
-GET `/custommodules` get all extensions  
-GET `/custommodules/{extensionkey}` get an extensions by its key  
-GET `/custommodules/{moduleId}` get an extension by its ID
+Die Umsetzung des Audits ist in [docs/frontend-improvements-2026-10-11.md](docs/frontend-improvements-2026-10-11.md) dokumentiert. Der Sitzungsverlauf liegt in `sessionStorage`, getrennt nach ChurchTools-Konto, und ist kein zentraler Audit-Log.
 
-GET `/custommodules/{moduleId}/customdatacategories`  
-POST `/custommodules/{moduleId}/customdatacategories`  
-PUT `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}`  
-DELETE `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}`
+## UX-/UI-Überarbeitung 0.2.0
 
-GET `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues`  
-POST `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues`  
-PUT `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues/{valueId}`  
-DELETE `/custommodules/{moduleId}/customdatacategories/{dataCategoryId}/customdatavalues/{valueId}`
+Interner Entwurfsschutz, bestätigte Mehrfachaktionen, erhaltene Filter, bessere mobile Navigation und Kontraste sowie sichtbare archivierte eigene Auswahl. Dazu kommen aggregierter Ergebnisexport, Terminmatrix, Entwurfs-Testansicht, Antwortbestätigung und Vorher-/Nachher-Verlauf.
 
-## Support
+[Umsetzung und Verifikation](docs/ux-fixes-2026-10-12/README.md).
 
-For questions about the ChurchTools API, visit the [Forum](https://forum.church.tools).
+## Formular-Design 0.2.1
+
+Waldgrün und Lime, große Auswahlkarten und Eingaben, Auswahl vor Kontaktdaten sowie eine laufende Antwortzusammenfassung. Übersicht, Detailkopf, Editor und Vorschau greifen dieselbe Gestaltung auf.
+
+[Designänderungen, Livechecks und Screenshots](docs/design-2026-10-12/README.md).
+
+Die Korrekturen aus dem Browserfeedback, einschließlich vollständiger CSS-Isolation und deaktiviertem globalen Dark Mode, sind in [UI-Feedback 0.2.2](docs/ui-feedback-2026-10-12/README.md) dokumentiert.
+
+Kompakte transparente Eingaben, automatische initiale Sortierreihenfolge, Schließen im Kartenmenü und direkt korrigierbare Datenfehler sind in [Editor-Feedback 0.2.3](docs/editor-feedback-2026-10-12/README.md) dokumentiert.
+
+Die weiteren Anpassungen an Tabs, Eintragsaktionen, Dialogen und Editor-Aktionsgruppen stehen in [Detail-Feedback 0.2.4](docs/detail-feedback-2026-10-12/README.md).
+
+Weiße Übersichtssuche, Statusplatzierung, kompakte Optionszeilen und Speicherplatz im Sticky-Footer: [Layout-Feedback 0.2.5](docs/spacing-feedback-2026-10-12/README.md). Die Entwurfsvorschau wurde auf Wunsch entfernt.
+
+Vollständig klickbare Optionskarten, kompakte Teilnehmerlisten und angepasste Abschnittsüberschriften: [Teilnehmerformular 0.2.6](docs/participant-feedback-2026-10-12/README.md).

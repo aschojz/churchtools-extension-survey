@@ -1,10 +1,11 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
-import CreateSurvey from './CreateSurvey.vue';
-import Overview from './Overview.vue';
-import SurveyForm from './form/SurveyForm.vue';
-import ListSurveys from './list/List.vue';
-import SurveyDetail from './survey/SurveyDetail.vue';
+import { basePath } from './config';
+const CreateSurvey = () => import('./CreateSurvey.vue');
+const Overview = () => import('./Overview.vue');
+const SurveyForm = () => import('./form/SurveyForm.vue');
+const ListSurveys = () => import('./list/List.vue');
+const SurveyDetail = () => import('./survey/SurveyDetail.vue');
 
 const routes: RouteRecordRaw[] = [
     {
@@ -31,11 +32,12 @@ const routes: RouteRecordRaw[] = [
         props: true,
     },
     { path: '', name: 'overview', component: Overview },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('./NotFound.vue') },
 ];
 
 export const router = createRouter({
     routes,
-    history: createWebHistory(`/ccm/${import.meta.env.VITE_KEY}/`),
+    history: createWebHistory(basePath),
     scrollBehavior(to, from, savedPosition) {
         if (to.hash) {
             return { el: to.hash, left: 0, top: 70 };

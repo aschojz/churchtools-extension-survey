@@ -1,4 +1,9 @@
-import type { FieldMultiselect, FieldSelect } from '@churchtools/utils';
+export type SurveyField = {
+    key: string;
+    nameTranslated?: string;
+    fieldTypeCode: 'select' | 'multiselect';
+    options: SurveyOptionNew[];
+};
 
 export const SurveyType = {
     BEST_DATE: 'best-date',
@@ -10,6 +15,9 @@ export const SurveyType = {
 export type SurveyType = (typeof SurveyType)[keyof typeof SurveyType];
 
 export type Survey = SurveyNew & {
+    id: number;
+    customModuleId: number;
+    shorty: string;
     meta: {
         createdDate: string;
         modifiedDate?: string;
@@ -20,7 +28,7 @@ export type SurveyNew = {
     name: string;
     description?: string;
     imageUrl?: string;
-    fields: ((FieldSelect | FieldMultiselect) & { options: SurveyOptionNew[] })[];
+    fields: SurveyField[];
     startDate?: string;
     endDate?: string;
     type: SurveyType;
@@ -31,6 +39,7 @@ export type SurveyNew = {
     isListed?: boolean;
     hideDataFromParticipants?: boolean;
     sortKey?: number;
+    schemaVersion?: number;
 };
 
 export type SurveyOptionNew = {
@@ -39,9 +48,13 @@ export type SurveyOptionNew = {
     description?: string;
     maxCount?: number;
     maxSelectable?: number;
+    archived?: boolean;
 };
 
 export type SurveyEntry = SurveyEntryNew & {
+    id: number;
+    dataCategoryId: number;
+    status: 'new' | 'completed' | 'cancelled';
     meta: {
         createdDate: string;
         modifiedDate?: string;

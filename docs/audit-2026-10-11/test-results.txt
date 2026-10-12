@@ -1,0 +1,39 @@
+
+> churchtools-extension-survey@0.0.8 test
+> vitest run --reporter=verbose
+
+
+ RUN  v5.0.3 /Users/jziegeler/git/extension-survey
+
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > prüft jede Mengenoption und bereits reservierte Kapazität 2ms
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > erhält die bisherige Bedeutung von Null-Grenzen als unbegrenzt 0ms
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > verhindert negative, gebrochene, leere oder unbekannte Mengen 0ms
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > prüft die Kapazität normaler Auswahloptionen und normalisiert Altwerte 0ms
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > weist ungültige, doppelte und mehrfache Einzelauswahl zurück 0ms
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > prüft Namensduplikate mit Leerzeichen und Großschreibung 0ms
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > prüft die aktuelle Öffnungszeit unmittelbar vor Speicherung 0ms
+ ✓ tests/validation.test.ts > Teilnahme und Kapazitäten > prüft Pflicht-E-Mail und eindeutige Optionen sowie Terminreihenfolge 0ms
+ ✓ tests/validation.test.ts > Bestehende Teilnahmelinks > liest bestehende und neu generierte Tokens 0ms
+ ✓ tests/action.test.ts > Asynchrone Benutzeraktionen > verhindert doppelte Speicherung während einer laufenden Anfrage 2ms
+ ✓ tests/action.test.ts > Asynchrone Benutzeraktionen > zeigt Fehler und erlaubt einen erneuten Versuch 0ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > deletion follows changed route after confirmation instead of original category 16ms
+ ✓ tests/data.test.ts > Öffentlicher Datenzugriff > bewahrt API-Metadaten beim Lesen alter JSON-Daten 2ms
+ ✓ tests/data.test.ts > Öffentlicher Datenzugriff > lädt Umfragen reaktiv nach Routewechsel und ruft versteckte Daten nicht ab 108ms
+ ✓ tests/data.test.ts > Öffentlicher Datenzugriff > lädt sichtbare Einträge erst nach dem Laden der Umfrage 65ms
+ ✓ tests/data.test.ts > Öffentlicher Datenzugriff > löscht nach Abbruch weder Umfragen noch Einträge 37ms
+ ✓ tests/data.test.ts > Öffentlicher Datenzugriff > wartet auf Schreiboperationen und erhält vorhandene Survey-Felder 36ms
+ ✓ tests/data.test.ts > Berechtigungen > beachtet kategorienspezifische Rechte, globale Rechte und fehlende Rechte 0ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > update prefers stale category list over fresher detail cache 1006ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > entry mutations accept quantities exceeding both limits 3ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > returned quantities still consume capacity 1ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > one malformed category prevents loading all valid categories 1ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > schema-incompatible objects pass decoding without validation 0ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > numeric strings from legacy data are ignored when counting capacity 0ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > two submissions validate against the same snapshot without a reservation 0ms
+ ✓ tests/audit-observations.test.ts > Audit: reproduzierte Fehlzustände (Bestätigung des Ist-Verhaltens) > inactive names remain listed with no schema-level format guarantees 0ms
+
+ Test Files  4 passed (4)
+      Tests  26 passed (26)
+   Start at  12:37:10
+   Duration  1.85s (environment 57%, tests 32%, transform 6%, import 5%)
+
