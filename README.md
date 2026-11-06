@@ -81,3 +81,9 @@ Die weiteren Anpassungen an Tabs, Eintragsaktionen, Dialogen und Editor-Aktionsg
 Weiße Übersichtssuche, Statusplatzierung, kompakte Optionszeilen und Speicherplatz im Sticky-Footer: [Layout-Feedback 0.2.5](docs/spacing-feedback-2026-10-12/README.md). Die Entwurfsvorschau wurde auf Wunsch entfernt.
 
 Vollständig klickbare Optionskarten, kompakte Teilnehmerlisten und angepasste Abschnittsüberschriften: [Teilnehmerformular 0.2.6](docs/participant-feedback-2026-10-12/README.md).
+
+## Gruppenübernahme
+
+Abgeschlossene oder deaktivierte Umfragen können über **Gruppenübernahme** in eine neue ChurchTools-Gruppe übertragen werden. Der Assistent unterstützt Personenabgleich und Personenanlage, erzeugt Mitgliedsfelder automatisch und zeigt vor der Übertragung alle Werte in einer Vorschau. Titel und Beschreibung stammen aus der Umfrage; bestehende Gruppen werden nicht verwendet.
+
+[Ablauf, API-Verträge und Grenzen](docs/group-transfer/README.md) · [Backlog für Wiederaufnahme und Aktualisierung](docs/group-transfer/backlog.md).
