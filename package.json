@@ -1,7 +1,7 @@
 {
     "name": "churchtools-extension-survey",
     "private": true,
-    "version": "0.2.6",
+    "version": "0.3.0",
     "type": "module",
     "scripts": {
         "dev": "vite",

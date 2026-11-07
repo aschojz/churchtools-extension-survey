@@ -12,6 +12,7 @@ import type { Survey, SurveyNew } from '../utils/types';
 import SurveyEntries from './SurveyEntries.vue';
 import SurveyResults from './SurveyResults.vue';
 import SurveyHistory from './SurveyHistory.vue';
+import SurveyGroupTransfer from './SurveyGroupTransfer.vue';
 const props = defineProps<{ id: string }>();
 const id = computed(() => Number(props.id));
 const { survey, isPending, error: loadError, refetch } = useSurvey(id, true);
@@ -26,6 +27,7 @@ const { updateSurvey } = useSurveys();
 const { surveyStatus } = useHelper();
 const { busy, error, run } = useAction();
 const toast = useToast();
+const transferBusy = ref(false);
 const tab = ref('results'),
     dirty = ref(false);
 const editor = ref<InstanceType<typeof SurveyEditor>>();
@@ -35,6 +37,7 @@ const tabs = computed(() => [
         ? [
               { value: 'results', label: 'Ergebnisse', icon: 'i-lucide-chart-no-axes-combined' },
               { value: 'entries', label: 'Einträge', icon: 'i-lucide-users' },
+              { value: 'group', label: 'Gruppenübernahme', icon: 'i-lucide-user-plus' },
           ]
         : []),
     { value: 'settings', label: 'Einstellungen', icon: 'i-lucide-settings' },
@@ -104,7 +107,7 @@ function statusAction() {
             :actions="[
                 {
                     label: status.label === 'Offen' ? 'Deaktivieren' : 'Jetzt öffnen',
-                    disabled: busy || dirty,
+                    disabled: busy || dirty || transferBusy,
                     onClick: statusAction,
                 },
             ]"
@@ -115,6 +118,7 @@ function statusAction() {
         <UTabs
             v-model="tab"
             :items="tabs"
+            :disabled="transferBusy"
             :content="false"
             class="survey:w-full survey-detail-tabs"
             :ui="{ trigger: 'survey:justify-center' }"
@@ -126,6 +130,13 @@ function statusAction() {
         <div v-show="tab === 'settings'">
             <SurveyEditor :key="id" ref="editor" :initial="survey" :busy="busy" @save="save" @dirty="dirty = $event" />
         </div>
+        <SurveyGroupTransfer
+            v-if="allowed('view custom data', id)"
+            v-show="tab === 'group'"
+            :key="`transfer-${id}`"
+            :survey="survey"
+            @busy="transferBusy = $event"
+        />
         <SurveyHistory v-if="tab === 'history'" :id="id" />
     </template>
     <UAlert
